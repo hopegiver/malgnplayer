@@ -141,7 +141,7 @@ export class PlayerUI {
             .malgnplayer-controls-right {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 1px;
             }
 
             .malgnplayer-btn {
@@ -604,7 +604,7 @@ export class PlayerUI {
             @media (max-width: 480px) {
                 .malgnplayer-controls-left,
                 .malgnplayer-controls-right {
-                    gap: 8px;
+                    gap: 0px;
                 }
 
                 .malgnplayer-btn {
