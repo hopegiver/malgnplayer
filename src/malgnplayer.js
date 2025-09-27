@@ -1,7 +1,7 @@
 import { VideoCore } from './core/video.js';
 import { Playlist } from './core/playlist.js';
 import { HLSPlugin } from './plugins/hls.js';
-import { DefaultTheme } from './themes/default.js';
+import { PlayerUI } from './core/ui.js';
 
 export default class MalgnPlayer {
     constructor(container, config = {}) {
@@ -80,11 +80,11 @@ export default class MalgnPlayer {
     }
 
     setupTheme() {
-        if (this.config.controls && this.config.theme === 'default') {
-            this.theme = new DefaultTheme(this);
+        if (this.config.controls) {
+            this.theme = new PlayerUI(this);
         }
 
-        // Hide native video controls if using custom theme
+        // Hide native video controls if using custom UI
         if (this.theme) {
             this.core.video.controls = false;
         }

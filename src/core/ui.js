@@ -1,9 +1,9 @@
 import { icons } from '../utils/icons.js';
 import { createElement, addClass, removeClass, setStyles } from '../utils/dom.js';
-import { SpeedLayer } from './components/speedLayer.js';
-import { SubtitlesLayer } from './components/subtitlesLayer.js';
+import { SpeedLayer } from '../ui/speedLayer.js';
+import { SubtitlesLayer } from '../ui/subtitlesLayer.js';
 
-export class DefaultTheme {
+export class PlayerUI {
     constructor(player) {
         this.player = player;
         this.container = player.container;
