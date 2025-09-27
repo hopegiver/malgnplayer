@@ -1,119 +1,209 @@
-# MalgnPlayer
+# 🎬 MalgnPlayer
 
-A modern HTML5 video player with JWPlayer-compatible API for easy migration. Built with ES6 modules and optimized for both desktop and mobile devices.
+Modern HTML5 video player with JWPlayer-compatible API, comprehensive streaming support, and advanced DRM protection.
 
-## Features
+[![NPM Version](https://img.shields.io/npm/v/malgnplayer.svg)](https://www.npmjs.com/package/malgnplayer)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Issues](https://img.shields.io/github/issues/hopegiver/malgnplayer.svg)](https://github.com/hopegiver/malgnplayer/issues)
 
+## ✨ Features
+
+### 🎥 Core Features
 - **JWPlayer-compatible API** - Easy migration from JWPlayer
-- **Multiple format support** - MP4, HLS streams with automatic fallback
-- **Mobile optimized** - Touch-friendly controls and responsive design
-- **Speed control** - 0.25x to 2x playback speed
-- **Subtitle support** - Automatic subtitle loading and selection
-- **YouTube-style interactions** - Click to pause, double-click to seek
-- **Autoloop mode** - Perfect for homepage banners and product showcases
-- **Modern architecture** - ES6 modules with plugin system
+- **Multiple formats** - MP4, WebM, HLS streaming support
+- **Plugin architecture** - Extensible and modular design
+- **Responsive design** - Mobile-optimized with touch events
+- **Custom UI** - YouTube-style interactions and controls
 
-## Installation
+### 🔒 DRM Protection
+- **Widevine DRM** - Google's DRM system support
+- **PlayReady DRM** - Microsoft's DRM system support
+- **EME Integration** - Native browser DRM via Encrypted Media Extensions
+- **License management** - Automatic acquisition and renewal
 
-### CDN (Recommended)
+### 🎮 Advanced Controls
+- **Speed control** - 0.25x to 2x playback speeds
+- **Subtitle support** - Multiple languages with auto-detection
+- **Progress bar** - Drag, click, and touch support with tooltips
+- **Volume control** - Visual slider with mute functionality
+- **Fullscreen** - Native fullscreen API support
+
+### 🔄 Special Modes
+- **Autoloop mode** - Seamless looping for GIF-like behavior
+- **Custom segments** - Loop specific time ranges
+- **Mobile optimization** - Touch-friendly controls and gestures
+
+## 📦 Installation
+
+### NPM
+```bash
+npm install malgnplayer
+```
+
+### CDN
 ```html
-<script src="https://cdn.jsdelivr.net/gh/hopegiver/malgnplayer@latest/dist/malgnplayer.min.js"></script>
+<!-- IIFE (Global variable) -->
+<script src="https://unpkg.com/malgnplayer/dist/malgnplayer.min.js"></script>
+
+<!-- ES Module -->
+<script type="module">
+  import MalgnPlayer from 'https://unpkg.com/malgnplayer/dist/malgnplayer.esm.js';
+</script>
 ```
 
 ### Download
-Download the latest release and include the script:
-```html
-<script src="path/to/malgnplayer.min.js"></script>
-```
+Download the latest release from [GitHub Releases](https://github.com/hopegiver/malgnplayer/releases)
 
-### ES Module
-```javascript
-import MalgnPlayer from './malgnplayer.esm.js';
-```
+## 🚀 Quick Start
 
-## Basic Usage
+### Basic Usage
 
-### HTML Setup
 ```html
 <div id="player"></div>
-```
 
-### JavaScript
-```javascript
-// Basic setup
-const player = new MalgnPlayer('player');
-
-// Load a video
-player.load({
+<script>
+// IIFE version
+const player = new MalgnPlayer('player', {
     file: 'https://example.com/video.mp4',
-    title: 'My Video',
-    poster: 'https://example.com/poster.jpg'
+    width: '100%',
+    height: '400px'
 });
-
-// Start playback
-player.play();
+</script>
 ```
 
-## Configuration Options
+### ES Modules
+
+```javascript
+import MalgnPlayer from 'malgnplayer';
+
+const player = new MalgnPlayer('player', {
+    file: 'https://example.com/video.mp4',
+    poster: 'https://example.com/poster.jpg',
+    autoplay: false,
+    controls: true
+});
+```
+
+### HLS Streaming
+
+```javascript
+const player = new MalgnPlayer('player', {
+    file: 'https://example.com/stream.m3u8',
+    type: 'hls'
+});
+```
+
+### DRM Protected Content
+
+```javascript
+const player = new MalgnPlayer('player', {
+    file: 'https://example.com/protected-content.m3u8',
+    drm: {
+        'com.widevine.alpha': {
+            licenseServerUrl: 'https://license-server.com/widevine',
+            videoRobustness: 'SW_SECURE_DECODE',
+            audioRobustness: 'SW_SECURE_CRYPTO'
+        }
+    }
+});
+```
+
+### Autoloop Mode
 
 ```javascript
 const player = new MalgnPlayer('player', {
     file: 'https://example.com/video.mp4',
-    type: 'mp4',
-    title: 'Video Title',
-    poster: 'https://example.com/poster.jpg',
-    sources: [
-        {
-            file: 'https://example.com/video.mp4',
-            type: 'mp4',
-            label: '720p'
-        },
-        {
-            file: 'https://example.com/stream.m3u8',
-            type: 'hls',
-            label: '1080p'
-        }
-    ]
+    autoloop: true,
+    loopStartTime: 10,
+    loopEndTime: 30,
+    muted: true
 });
 ```
 
-## API Methods
+## 📚 API Reference
 
-### Playback Control
+### Constructor
+
 ```javascript
-player.play();           // Start playback
-player.pause();          // Pause playback
-player.stop();           // Stop and reset
-player.seek(30);         // Seek to 30 seconds
+new MalgnPlayer(container, config)
 ```
 
-### Load Content
-```javascript
-// Load single video
-player.load({
-    file: 'video.mp4',
-    title: 'My Video'
-});
+**Parameters:**
+- `container` (string|Element) - Container element ID or DOM element
+- `config` (object) - Configuration options
 
-// Load playlist
-player.load([
-    { file: 'video1.mp4', title: 'Video 1' },
-    { file: 'video2.mp4', title: 'Video 2' }
-]);
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `file` | string | - | Video file URL |
+| `sources` | array | - | Multiple video sources |
+| `type` | string | 'auto' | Video type (mp4, hls, etc.) |
+| `poster` | string | - | Poster image URL |
+| `width` | string | '100%' | Player width |
+| `height` | string | '100%' | Player height |
+| `autoplay` | boolean | false | Auto-start playback |
+| `muted` | boolean | false | Start muted |
+| `controls` | boolean | true | Show player controls |
+| `autoloop` | boolean | false | Enable autoloop mode |
+| `loopStartTime` | number | 0 | Loop start time (seconds) |
+| `loopEndTime` | number | null | Loop end time (seconds) |
+| `drm` | object | - | DRM configuration |
+
+### Methods
+
+#### Playback Control
+```javascript
+player.play()           // Start playback
+player.pause()          // Pause playback
+player.stop()           // Stop and reset to beginning
+player.seek(time)       // Seek to time (seconds)
+player.setVolume(level) // Set volume (0-100)
+player.setMuted(muted)  // Mute/unmute
 ```
 
-### Get Player State
+#### Player Control
 ```javascript
-player.getState();       // 'idle', 'loading', 'playing', 'paused'
-player.getPosition();    // Current time in seconds
-player.getDuration();    // Total duration in seconds
-player.getVolume();      // Volume level (0-100)
+player.load(source)        // Load new media
+player.resize(width, height) // Resize player
+player.setFullscreen(true)   // Toggle fullscreen
+player.destroy()             // Destroy player instance
 ```
 
-### Volume Control
+#### Information
 ```javascript
-player.setVolume(50);    // Set volume to 50%
-player.setMute(true);    // Mute audio
+player.getState()         // Get current state
+player.getPosition()      // Get current time
+player.getDuration()      // Get total duration
+player.getVolume()        // Get volume level
+player.getPlaybackRate()  // Get playback speed
+```
+
+#### Quality Control
+```javascript
+player.getQualityLevels()     // Get available quality levels
+player.getCurrentQuality()    // Get current quality
+player.setCurrentQuality(level) // Set quality level
+```
+
+#### Subtitles
+```javascript
+player.getSubtitles()     // Get available subtitles
+player.setSubtitle(index) // Set active subtitle track
+```
+
+#### DRM
+```javascript
+player.getDrmInfo()        // Get DRM information
+player.renewDrmLicense()   // Renew DRM license
+player.isDrmProtected()    // Check if content is DRM protected
+```
+
+#### Autoloop
+```javascript
+player.enableAutoloop()    // Enable autoloop mode
+player.disableAutoloop()   // Disable autoloop mode
+player.setLoopSegment(start, end) // Set custom loop segment
 ```
 
 ## Event Handling
