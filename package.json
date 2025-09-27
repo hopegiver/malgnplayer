@@ -1,0 +1,25 @@
+{
+  "name": "malgnplayer",
+  "version": "1.0.0",
+  "description": "HTML5 Video Player with JWPlayer compatible API",
+  "main": "dist/malgnplayer.min.js",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js --watch",
+    "serve": "npx http-server -p 8080 -c-1",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "video",
+    "player",
+    "html5",
+    "hls",
+    "jwplayer"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.19.0",
+    "http-server": "^14.1.0"
+  }
+}
