@@ -21,6 +21,9 @@ export default class MalgnPlayer {
             autoplay: false,
             muted: false,
             controls: true,
+            autoloop: false,
+            loopStartTime: 0,
+            loopEndTime: null,
             ...config
         };
 
@@ -28,6 +31,8 @@ export default class MalgnPlayer {
         this.playlist = new Playlist();
         this.plugins = {};
         this.theme = null;
+        this.loopMonitor = null;
+        this.lastSeekTime = 0;
 
         this.init();
     }
@@ -79,12 +84,13 @@ export default class MalgnPlayer {
     }
 
     setupTheme() {
-        if (this.config.controls) {
+        // Don't show controls in autoloop mode
+        if (this.config.controls && !this.config.autoloop) {
             this.theme = new PlayerUI(this);
         }
 
-        // Hide native video controls if using custom UI
-        if (this.theme) {
+        // Hide native video controls if using custom UI or in autoloop mode
+        if (this.theme || this.config.autoloop) {
             this.core.video.controls = false;
         }
     }
@@ -95,9 +101,44 @@ export default class MalgnPlayer {
         });
 
         this.core.on('ended', () => {
-            const nextItem = this.playlist.next();
-            if (nextItem) {
-                this.core.load(nextItem);
+            if (this.config.autoloop) {
+                this.smoothRestart();
+            } else {
+                const nextItem = this.playlist.next();
+                if (nextItem) {
+                    this.core.load(nextItem);
+                }
+            }
+        });
+
+        // Setup autoloop when playing starts
+        this.core.on('playing', () => {
+            console.log('Playing event triggered, autoloop:', this.config.autoloop);
+            if (this.config.autoloop) {
+                console.log('Starting seamless loop');
+                this.startSeamlessLoop();
+            }
+        });
+
+        // Clear autoloop when paused
+        this.core.on('pause', () => {
+            this.stopSeamlessLoop();
+        });
+
+        // Monitor time updates for seamless looping
+        this.core.on('timeupdate', (data) => {
+            if (this.config.autoloop && this.loopMonitor) {
+                this.checkLoopPoint(data.currentTime);
+            }
+        });
+
+        // Setup autoloop behavior after loading
+        this.core.on('loadeddata', () => {
+            if (this.config.autoloop) {
+                // Auto-start playback in autoloop mode
+                this.core.video.muted = true; // Ensure muted for autoplay
+                this.core.video.loop = false; // Always use custom seamless loop
+                this.play();
             }
         });
     }
@@ -295,14 +336,27 @@ export default class MalgnPlayer {
         }
 
         const subtitles = [];
+        const seenLanguages = new Set();
+
         for (let i = 0; i < this.core.video.textTracks.length; i++) {
             const track = this.core.video.textTracks[i];
             if (track.kind === 'subtitles' || track.kind === 'captions') {
-                subtitles.push({
-                    label: track.label,
-                    language: track.language,
-                    kind: track.kind
-                });
+                // Skip forced subtitles
+                const label = track.label || '';
+                if (label.toLowerCase().includes('forced')) {
+                    continue;
+                }
+
+                const key = track.language + label;
+                if (!seenLanguages.has(key)) {
+                    seenLanguages.add(key);
+                    subtitles.push({
+                        label: label,
+                        language: track.language,
+                        kind: track.kind,
+                        index: i
+                    });
+                }
             }
         }
         return subtitles;
@@ -432,5 +486,178 @@ export default class MalgnPlayer {
     restart() {
         this.seek(0);
         return this;
+    }
+
+    // Autoloop functionality (always seamless)
+
+    startSeamlessLoop() {
+        console.log('startSeamlessLoop called');
+        if (!this.core.video) {
+            console.log('No video element found');
+            return;
+        }
+
+        this.loopMonitor = true;
+        console.log('Loop monitor enabled');
+
+        // Calculate loop end time if not specified
+        if (this.config.loopEndTime === null) {
+            const duration = this.getDuration();
+            console.log('Video duration:', duration);
+            if (duration > 0) {
+                this.config.loopEndTime = duration; // Default to full video
+            }
+        }
+
+        console.log(`Loop configuration: start=${this.config.loopStartTime}s, end=${this.config.loopEndTime}s`);
+
+        // If we have a custom start time, seek to it initially
+        const startTime = this.config.loopStartTime || 0;
+        if (startTime > 0 && this.core.video.currentTime < startTime) {
+            console.log(`Starting seamless loop from ${startTime}s to ${this.config.loopEndTime}s`);
+            this.seamlessSeek(startTime);
+        } else {
+            console.log(`Current time ${this.core.video.currentTime}s is already at or past start time ${startTime}s`);
+        }
+    }
+
+    stopSeamlessLoop() {
+        this.loopMonitor = false;
+    }
+
+    checkLoopPoint(currentTime) {
+        if (!this.config.autoloop || !this.loopMonitor) return;
+
+        const endTime = this.config.loopEndTime || this.getDuration();
+        const startTime = this.config.loopStartTime || 0;
+
+        // Add some tolerance to prevent too frequent seeking
+        const tolerance = 0.1; // 100ms tolerance
+        const now = Date.now();
+
+        // Prevent seeking too frequently (debounce)
+        if (now - this.lastSeekTime < 500) { // 500ms debounce
+            return;
+        }
+
+        // Check if we've reached the loop end point
+        if (currentTime >= (endTime - tolerance)) {
+            console.log(`Loop point reached: ${currentTime.toFixed(2)}s >= ${endTime}s, seeking to ${startTime}s`);
+            this.lastSeekTime = now;
+            this.seamlessSeek(startTime);
+        }
+    }
+
+    seamlessSeek(time) {
+        if (!this.core.video) return;
+
+        try {
+            const video = this.core.video;
+            console.log(`Seamless seeking from ${video.currentTime.toFixed(2)}s to ${time}s, readyState: ${video.readyState}`);
+
+            // Ensure video is ready for seeking
+            if (video.readyState >= 2) { // HAVE_CURRENT_DATA
+                video.currentTime = time;
+                console.log(`Seek completed, new currentTime: ${video.currentTime.toFixed(2)}s`);
+            } else {
+                console.warn('Video not ready for seeking, waiting...');
+                // Try again after a short delay
+                setTimeout(() => {
+                    if (this.config.autoloop && this.loopMonitor) {
+                        this.seamlessSeek(time);
+                    }
+                }, 50);
+            }
+        } catch (error) {
+            console.warn('Seamless seek failed:', error);
+            // Fallback to regular seek
+            this.seek(time);
+        }
+    }
+
+    async setAutoloop(enabled) {
+        console.log(`setAutoloop called: enabled=${enabled}`);
+        this.config.autoloop = enabled;
+
+        if (enabled) {
+            // Hide controls and ensure muted
+            if (this.theme && this.theme.destroy) {
+                this.theme.destroy();
+                this.theme = null;
+            }
+            this.core.video.controls = false;
+            this.core.video.muted = true;
+            this.core.video.loop = false; // Always use our custom seamless loop
+
+            console.log(`Autoloop enabled. IsPlaying: ${this.isPlaying()}`);
+            if (this.isPlaying()) {
+                console.log('Starting seamless autoloop');
+                this.startSeamlessLoop();
+            } else {
+                console.log('Video not playing, waiting for play event');
+            }
+        } else {
+            // Disable autoloop and restore controls if needed
+            this.stopSeamlessLoop();
+            this.core.video.loop = false;
+            if (this.config.controls && !this.theme) {
+                const { PlayerUI } = await import('./ui/ui.js');
+                this.theme = new PlayerUI(this);
+                this.core.video.controls = false;
+            }
+        }
+
+        return this;
+    }
+
+    getAutoloop() {
+        return {
+            enabled: this.config.autoloop,
+            startTime: this.config.loopStartTime,
+            endTime: this.config.loopEndTime
+        };
+    }
+
+    setLoopSegment(startTime, endTime) {
+        this.config.loopStartTime = Math.max(0, startTime || 0);
+        this.config.loopEndTime = endTime;
+
+        console.log(`Loop segment set: ${this.config.loopStartTime}s to ${this.config.loopEndTime}s`);
+
+        // Restart seamless loop if currently active
+        if (this.config.autoloop && this.loopMonitor) {
+            this.stopSeamlessLoop();
+            this.startSeamlessLoop();
+        }
+
+        return this;
+    }
+
+    getLoopSegment() {
+        return {
+            startTime: this.config.loopStartTime,
+            endTime: this.config.loopEndTime
+        };
+    }
+
+    destroy() {
+        // Clear seamless loop
+        this.stopSeamlessLoop();
+
+        if (this.theme && this.theme.destroy) {
+            this.theme.destroy();
+        }
+
+        this.core.destroy();
+
+        Object.values(this.plugins).forEach(plugin => {
+            if (plugin.destroy) {
+                plugin.destroy();
+            }
+        });
+
+        if (this.container) {
+            this.container.innerHTML = '';
+        }
     }
 }

@@ -11,6 +11,14 @@
             margin: 20px auto;
             background: #000;
         }
+        .autoloop-container {
+            width: 600px;
+            height: 300px;
+            margin: 20px auto;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
         .controls {
             text-align: center;
             margin: 20px;
@@ -19,11 +27,62 @@
             margin: 5px;
             padding: 10px 15px;
         }
+        .section-title {
+            text-align: center;
+            margin: 40px 0 20px 0;
+            color: #333;
+            border-bottom: 2px solid #007acc;
+            padding-bottom: 10px;
+        }
+        .demo-info {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f8ff;
+            border-radius: 6px;
+            color: #555;
+        }
+        .segment-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .segment-controls label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .segment-controls input {
+            width: 60px;
+            padding: 5px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .segment-controls button {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .segment-controls button:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
     <h1>MalgnPlayer Test</h1>
 
+    <h2 class="section-title">📺 기본 플레이어 (컨트롤 포함)</h2>
     <div id="player" class="player-container"></div>
 
     <div class="controls">
@@ -53,6 +112,37 @@
         <button onclick="loadHLSWithType()">Load HLS (Type: HLS)</button>
     </div>
 
+    <h2 class="section-title">🔄 Autoloop 플레이어 (GIF처럼 동작)</h2>
+    <div class="demo-info">
+        5~20초 구간만 자연스럽게 무한 루프됩니다 (까만 화면 없음). 기본 설정으로 구간을 지정할 수 있습니다.
+    </div>
+    <div id="autoloop-player" class="autoloop-container"></div>
+
+    <div class="segment-controls">
+        <label>현재 시간: <span id="currentTimeDisplay">0.0</span>초</label>
+        <label>|</label>
+        <label>구간 설정:</label>
+        <label>시작</label>
+        <input type="number" id="startTime" value="0" min="0" step="0.1" placeholder="0">
+        <label>초 ~</label>
+        <label>끝</label>
+        <input type="number" id="endTime" value="15" min="0.1" step="0.1" placeholder="15">
+        <label>초</label>
+        <button onclick="setCustomSegment()">구간 루프 시작</button>
+        <button onclick="getCurrentSegment()">현재 구간 가져오기</button>
+    </div>
+
+    <div class="controls">
+        <button onclick="enableAutoloop()">Autoloop 활성화</button>
+        <button onclick="disableAutoloop()">Autoloop 비활성화</button>
+        <button onclick="setLoop10()">10초 루프</button>
+        <button onclick="setLoop15()">15초 루프</button>
+        <button onclick="setLoop30()">30초 루프</button>
+        <button onclick="setSeamlessLoop()">전체 Seamless 루프</button>
+        <button onclick="setSegmentLoop()">구간 루프 (5-20초)</button>
+        <button onclick="showAutoloopStatus()">상태 확인</button>
+    </div>
+
     <script type="module">
         import MalgnPlayer from './src/malgnplayer.js';
 
@@ -68,8 +158,20 @@
             poster: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg'
         });
 
-        // Make player globally available for button onclick handlers
+        // Initialize autoloop player (always seamless)
+        const autoloopPlayer = new MalgnPlayer('autoloop-player', {
+            file: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            width: '800px',
+            height: '450px',
+            autoloop: true,
+            loopStartTime: 5,     // Start from 5 seconds
+            loopEndTime: 20,      // End at 20 seconds
+            muted: true
+        });
+
+        // Make players globally available for button onclick handlers
         window.player = player;
+        window.autoloopPlayer = autoloopPlayer;
 
         // Event listeners
         player.on('play', (data) => {
@@ -140,6 +242,107 @@
                 poster: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg'
             });
         };
+
+        // Autoloop control functions (always seamless)
+        window.enableAutoloop = async () => {
+            await autoloopPlayer.setAutoloop(true);
+            console.log('Autoloop enabled (seamless)');
+        };
+
+        window.disableAutoloop = async () => {
+            await autoloopPlayer.setAutoloop(false);
+            console.log('Autoloop disabled');
+        };
+
+        window.setLoop10 = async () => {
+            autoloopPlayer.setLoopSegment(0, 10); // First 10 seconds
+            await autoloopPlayer.setAutoloop(true);
+            console.log('Loop set to first 10 seconds');
+        };
+
+        window.setLoop15 = async () => {
+            autoloopPlayer.setLoopSegment(0, 15); // First 15 seconds
+            await autoloopPlayer.setAutoloop(true);
+            console.log('Loop set to first 15 seconds');
+        };
+
+        window.setLoop30 = async () => {
+            autoloopPlayer.setLoopSegment(0, 30); // First 30 seconds
+            await autoloopPlayer.setAutoloop(true);
+            console.log('Loop set to first 30 seconds');
+        };
+
+        window.setSeamlessLoop = async () => {
+            autoloopPlayer.setLoopSegment(0, null); // Full video loop
+            await autoloopPlayer.setAutoloop(true);
+            console.log('Full video loop enabled');
+        };
+
+        window.setSegmentLoop = async () => {
+            autoloopPlayer.setLoopSegment(5, 20); // 5-20 seconds
+            await autoloopPlayer.setAutoloop(true);
+            console.log('Segment loop enabled (5-20 seconds)');
+        };
+
+        window.setCustomSegment = async () => {
+            const startTime = parseFloat(document.getElementById('startTime').value) || 0;
+            const endTimeInput = document.getElementById('endTime').value;
+            const endTime = endTimeInput ? parseFloat(endTimeInput) : null;
+
+            // Validation
+            if (endTime !== null && startTime >= endTime) {
+                alert('시작 시간은 끝 시간보다 작아야 합니다.');
+                return;
+            }
+
+            if (startTime < 0) {
+                alert('시작 시간은 0 이상이어야 합니다.');
+                return;
+            }
+
+            // Apply custom segment
+            autoloopPlayer.setLoopSegment(startTime, endTime);
+            await autoloopPlayer.setAutoloop(true);
+
+            const endTimeText = endTime !== null ? `${endTime}초` : '끝까지';
+            console.log(`커스텀 구간 루프: ${startTime}초 ~ ${endTimeText}`);
+            alert(`구간 루프 시작: ${startTime}초 ~ ${endTimeText}`);
+        };
+
+        window.getCurrentSegment = () => {
+            const currentTime = autoloopPlayer.getCurrentTime();
+            const duration = autoloopPlayer.getDuration();
+
+            document.getElementById('startTime').value = Math.max(0, currentTime - 5).toFixed(1);
+            document.getElementById('endTime').value = Math.min(duration, currentTime + 10).toFixed(1);
+
+            console.log(`현재 위치 기준 구간 설정: ${currentTime.toFixed(1)}초 주변`);
+        };
+
+        window.showAutoloopStatus = () => {
+            const status = autoloopPlayer.getAutoloop();
+            const currentTime = autoloopPlayer.getCurrentTime();
+            const message = `Autoloop 상태: ${status.enabled ? '활성화' : '비활성화'}\n현재 재생 시간: ${currentTime.toFixed(1)}초\n루프 시작: ${status.startTime}초\n루프 종료: ${status.endTime || '전체'}초`;
+            alert(message);
+            console.log('Autoloop status:', status, 'Current time:', currentTime);
+        };
+
+        // Autoloop player event listeners
+        autoloopPlayer.on('play', () => {
+            console.log('Autoloop player started');
+        });
+
+        autoloopPlayer.on('ended', () => {
+            console.log('Autoloop player ended (will restart automatically)');
+        });
+
+        // Update current time display
+        autoloopPlayer.on('timeupdate', (data) => {
+            const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+            if (currentTimeDisplay) {
+                currentTimeDisplay.textContent = data.currentTime.toFixed(1);
+            }
+        });
 
         // Default video is already loaded via initial options
     </script>
