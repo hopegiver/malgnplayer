@@ -1,12 +1,34 @@
 # Dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Build outputs
 dist/
+build/
+*.tgz
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Logs
 *.log
-npm-debug.log*
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
 
 # OS generated files
 .DS_Store
@@ -16,13 +38,21 @@ npm-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# IDE
+# IDE and editors
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
 # Temporary files
 *.tmp
 *.temp
+.cache/
