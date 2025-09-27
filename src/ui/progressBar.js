@@ -83,6 +83,29 @@ export class ProgressBar {
             }
         });
 
+        // Touch events for mobile
+        this.progressBar.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.isDragging = true;
+            const touch = e.touches[0];
+            this.updateProgressFromTouch(touch);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (this.isDragging) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                this.updateProgressFromTouch(touch);
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (this.isDragging) {
+                this.isDragging = false;
+                this.progressTooltip.style.opacity = '0';
+            }
+        });
+
         // Player events
         this.player.on('timeupdate', (data) => {
             this.updateProgress(data.currentTime, data.duration);
@@ -132,6 +155,23 @@ export class ProgressBar {
             this.progressTooltip.textContent = timeString;
             this.progressTooltip.style.left = `${percent * 100}%`;
             this.progressTooltip.style.opacity = '1';
+
+            // Seek video to new position
+            this.player.seek(time);
+        }
+    }
+
+    updateProgressFromTouch(touch) {
+        const rect = this.progressBar.getBoundingClientRect();
+        const percent = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+        const duration = this.player.getDuration();
+
+        if (duration) {
+            const time = duration * percent;
+
+            // Update visual progress immediately
+            this.progressPlayed.style.width = `${percent * 100}%`;
+            this.progressThumb.style.left = `${percent * 100}%`;
 
             // Seek video to new position
             this.player.seek(time);

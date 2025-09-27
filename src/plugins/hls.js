@@ -35,9 +35,9 @@ export class HLSPlugin {
 
         try {
             // Try dynamic import first
-            const hlsModule = await import('../libs/hls.js');
+            const hlsModule = await import('../libs/hls.min.js');
             this.hlsLoaded = true;
-            return hlsModule.default;
+            return window.Hls;
         } catch (importError) {
             // Fallback to script tag loading if import fails
             return new Promise((resolve, reject) => {

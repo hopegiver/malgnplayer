@@ -7,6 +7,7 @@ export class Controls {
         this.player = ui.player;
         this.container = ui.container;
         this.controls = null;
+        this.icons = icons;
 
         this.init();
     }

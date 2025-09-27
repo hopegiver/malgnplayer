@@ -91,6 +91,47 @@ export class VideoInteractions {
             this.seek(10);
             this.showSeekIndicator('right');
         });
+
+        // Touch events for mobile
+        let lastTap = 0;
+        const doubleTapThreshold = 300;
+
+        // Center area touch
+        this.centerClickArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.togglePlayPause();
+        });
+
+        // Left area double tap
+        this.leftClickArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+
+            if (tapLength < doubleTapThreshold && tapLength > 0) {
+                this.seek(-10);
+                this.showSeekIndicator('left');
+            }
+            lastTap = currentTime;
+        });
+
+        // Right area double tap
+        this.rightClickArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+
+            if (tapLength < doubleTapThreshold && tapLength > 0) {
+                this.seek(10);
+                this.showSeekIndicator('right');
+            }
+            lastTap = currentTime;
+        });
     }
 
     bindPlayerEvents() {

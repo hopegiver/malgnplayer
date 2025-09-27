@@ -31,17 +31,14 @@ export class SubtitlesLayer {
     createContent() {
         const wrapper = createElement('div', { className: 'malgnplayer-subtitles-menu' });
 
-        const title = createElement('div', {
-            className: 'malgnplayer-subtitles-title',
-            innerHTML: '자막'
-        });
-        wrapper.appendChild(title);
-
         const list = createElement('div', { className: 'malgnplayer-subtitles-list' });
+
+        // Get current subtitle state
+        const currentSubtitle = this.player.getCurrentSubtitle();
 
         // Off option
         const offItem = createElement('div', {
-            className: `malgnplayer-subtitles-item ${!this.currentSubtitle ? 'active' : ''}`,
+            className: `malgnplayer-subtitles-item ${currentSubtitle === null ? 'active' : ''}`,
             innerHTML: '자막 끄기'
         });
 
@@ -53,14 +50,15 @@ export class SubtitlesLayer {
 
         // Available subtitles
         const subtitles = this.player.getSubtitles();
-        subtitles.forEach((subtitle, index) => {
+        subtitles.forEach((subtitle, arrayIndex) => {
+            const realIndex = subtitle.index;
             const item = createElement('div', {
-                className: `malgnplayer-subtitles-item ${this.currentSubtitle === index ? 'active' : ''}`,
-                innerHTML: subtitle.label || subtitle.language || `자막 ${index + 1}`
+                className: `malgnplayer-subtitles-item ${currentSubtitle === realIndex ? 'active' : ''}`,
+                innerHTML: subtitle.label || subtitle.language || `자막 ${arrayIndex + 1}`
             });
 
             item.addEventListener('click', () => {
-                this.selectSubtitle(index);
+                this.selectSubtitle(realIndex);
             });
 
             list.appendChild(item);
@@ -75,21 +73,36 @@ export class SubtitlesLayer {
         this.currentSubtitle = index;
         this.player.setSubtitle(index);
 
-        // Update button state
-        if (index === null) {
-            this.theme.subtitlesButton.innerHTML = this.theme.icons.subtitlesOff;
-        } else {
-            this.theme.subtitlesButton.innerHTML = this.theme.icons.subtitles;
+        // Update button state in controls component
+        if (this.theme.controls && this.theme.controls.subtitlesButton) {
+            if (index === null) {
+                this.theme.controls.subtitlesButton.innerHTML = this.theme.controls.icons.subtitlesOff;
+            } else {
+                this.theme.controls.subtitlesButton.innerHTML = this.theme.controls.icons.subtitles;
+            }
         }
 
         // Update active state in the menu
         const items = this.layer.layer.querySelectorAll('.malgnplayer-subtitles-item');
         items.forEach((item, itemIndex) => {
             removeClass(item, 'active');
-            if ((index === null && itemIndex === 0) || (index !== null && itemIndex === index + 1)) {
+            // First item (index 0) is "자막 끄기", so it's active when index is null
+            if ((index === null && itemIndex === 0)) {
                 addClass(item, 'active');
             }
         });
+
+        // Find and activate the selected subtitle
+        if (index !== null) {
+            const subtitles = this.player.getSubtitles();
+            const selectedSubtitle = subtitles.find(sub => sub.index === index);
+            if (selectedSubtitle) {
+                const arrayIndex = subtitles.indexOf(selectedSubtitle);
+                if (items[arrayIndex + 1]) { // +1 because first item is "자막 끄기"
+                    addClass(items[arrayIndex + 1], 'active');
+                }
+            }
+        }
 
         this.hide();
     }

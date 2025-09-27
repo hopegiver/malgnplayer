@@ -373,21 +373,13 @@ export class PlayerUI {
             .malgnplayer-subtitles-menu {
                 background: rgba(40, 40, 40, 0.95);
                 border-radius: 8px;
-                padding: 20px;
+                padding: 15px;
                 color: white;
-                min-width: 250px;
+                min-width: 120px;
                 max-height: 80vh;
                 overflow-y: auto;
             }
 
-            .malgnplayer-subtitles-title {
-                font-size: 16px;
-                font-weight: bold;
-                margin-bottom: 15px;
-                text-align: center;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-                padding-bottom: 10px;
-            }
 
             .malgnplayer-subtitles-list {
                 display: flex;
@@ -396,10 +388,12 @@ export class PlayerUI {
             }
 
             .malgnplayer-subtitles-item {
-                padding: 8px 15px;
+                padding: 6px 12px;
                 cursor: pointer;
                 border-radius: 4px;
                 transition: background-color 0.2s;
+                font-size: 14px;
+                text-align: center;
             }
 
             .malgnplayer-subtitles-item:hover {
@@ -542,6 +536,100 @@ export class PlayerUI {
                 100% {
                     opacity: 1;
                     transform: translateY(-50%) scale(1);
+                }
+            }
+
+            /* Mobile Optimizations */
+            @media (max-width: 768px) {
+                .malgnplayer-controls {
+                    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+                }
+
+                .malgnplayer-controls-bottom {
+                    padding: 8px 12px;
+                }
+
+                .malgnplayer-btn {
+                    padding: 12px;
+                    min-width: 44px;
+                    min-height: 44px;
+                }
+
+                .malgnplayer-btn svg {
+                    width: 20px;
+                    height: 20px;
+                }
+
+                .malgnplayer-progress-bar {
+                    height: 6px;
+                }
+
+                .malgnplayer-progress-thumb {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                .malgnplayer-center-play-btn svg {
+                    width: 80px;
+                    height: 80px;
+                }
+
+                .malgnplayer-seek-indicator svg {
+                    width: 60px;
+                    height: 60px;
+                }
+
+                .malgnplayer-speed-menu,
+                .malgnplayer-subtitles-menu {
+                    min-width: 140px;
+                    padding: 20px;
+                }
+
+                .malgnplayer-speed-item,
+                .malgnplayer-subtitles-item {
+                    padding: 12px 16px;
+                    font-size: 16px;
+                }
+
+                .malgnplayer-time {
+                    font-size: 12px;
+                    min-width: 80px;
+                }
+
+                .malgnplayer-volume-container:hover .malgnplayer-volume-slider {
+                    width: 60px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .malgnplayer-controls-left,
+                .malgnplayer-controls-right {
+                    gap: 8px;
+                }
+
+                .malgnplayer-btn {
+                    padding: 10px;
+                }
+
+                .malgnplayer-btn svg {
+                    width: 18px;
+                    height: 18px;
+                }
+
+                .malgnplayer-time {
+                    font-size: 11px;
+                    min-width: 70px;
+                }
+
+                .malgnplayer-center-play-btn svg {
+                    width: 70px;
+                    height: 70px;
+                }
+
+                .malgnplayer-speed-menu,
+                .malgnplayer-subtitles-menu {
+                    min-width: 160px;
+                    max-width: 90vw;
                 }
             }
         `;
