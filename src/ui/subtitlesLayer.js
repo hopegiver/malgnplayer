@@ -1,5 +1,5 @@
 import { createElement, addClass, removeClass } from '../utils/dom.js';
-import { Layer } from '../utils/layer.js';
+import { Layer } from './layer.js';
 
 export class SubtitlesLayer {
     constructor(theme) {

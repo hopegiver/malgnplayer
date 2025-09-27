@@ -1,5 +1,5 @@
 import { createElement, addClass, removeClass } from '../utils/dom.js';
-import { Layer } from '../utils/layer.js';
+import { Layer } from './layer.js';
 
 export class SpeedLayer {
     constructor(theme) {
@@ -32,12 +32,6 @@ export class SpeedLayer {
     createContent() {
         const wrapper = createElement('div', { className: 'malgnplayer-speed-menu' });
 
-        const title = createElement('div', {
-            className: 'malgnplayer-speed-title',
-            innerHTML: '재생 속도'
-        });
-        wrapper.appendChild(title);
-
         const list = createElement('div', { className: 'malgnplayer-speed-list' });
 
         this.speedOptions.forEach(speed => {
@@ -55,49 +49,6 @@ export class SpeedLayer {
 
         wrapper.appendChild(list);
 
-        // Custom speed input section
-        const customSection = createElement('div', { className: 'malgnplayer-speed-custom' });
-
-        const customTitle = createElement('div', {
-            className: 'malgnplayer-speed-custom-title',
-            innerHTML: '사용자 정의'
-        });
-
-        const customInput = createElement('div', { className: 'malgnplayer-speed-input-group' });
-
-        const input = createElement('input', {
-            type: 'number',
-            className: 'malgnplayer-speed-input',
-            min: '0.1',
-            max: '4',
-            step: '0.1',
-            value: this.currentSpeed.toString()
-        });
-
-        const applyBtn = createElement('button', {
-            className: 'malgnplayer-speed-apply',
-            innerHTML: '적용'
-        });
-
-        applyBtn.addEventListener('click', () => {
-            const customSpeed = parseFloat(input.value);
-            if (customSpeed >= 0.1 && customSpeed <= 4) {
-                this.selectSpeed(customSpeed);
-            }
-        });
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                applyBtn.click();
-            }
-        });
-
-        customInput.appendChild(input);
-        customInput.appendChild(applyBtn);
-        customSection.appendChild(customTitle);
-        customSection.appendChild(customInput);
-        wrapper.appendChild(customSection);
-
         return wrapper;
     }
 
@@ -105,8 +56,10 @@ export class SpeedLayer {
         this.currentSpeed = speed;
         this.player.setPlaybackRate(speed);
 
-        // Update button text
-        this.theme.speedText.textContent = `${speed}x`;
+        // Update button text in controls component
+        if (this.theme.controls && this.theme.controls.speedText) {
+            this.theme.controls.speedText.textContent = `${speed}x`;
+        }
 
         // Update active state in the menu
         const items = this.layer.layer.querySelectorAll('.malgnplayer-speed-item');

@@ -1,4 +1,4 @@
-import { createElement, addClass, removeClass } from './dom.js';
+import { createElement, addClass, removeClass } from '../utils/dom.js';
 
 export class Layer {
     constructor(container) {
