@@ -28,24 +28,6 @@ const builds = [
   },
 ];
 
-async function createUMDWrapper() {
-  const esmContent = fs.readFileSync('dist/malgnplayer.esm.js', 'utf8');
-
-  const umdWrapper = `(function (root, factory) {
-  if (typeof exports === 'object' && typeof module !== 'undefined') {
-    module.exports = factory();
-  } else if (typeof define === 'function' && define.amd) {
-    define(factory);
-  } else {
-    root.MalgnPlayer = factory();
-  }
-}(typeof self !== 'undefined' ? self : this, function () {
-${esmContent.replace(/export\s+default\s+/, 'return ')}
-}));`;
-
-  fs.writeFileSync('dist/malgnplayer.umd.js', umdWrapper);
-  console.log('Built dist/malgnplayer.umd.js');
-}
 
 async function copyLibs() {
   // Create libs directory in dist
@@ -84,9 +66,6 @@ async function build() {
       }
     }
 
-    if (!isWatch) {
-      await createUMDWrapper();
-    }
 
     if (isWatch) {
       console.log('Watching for changes...');
