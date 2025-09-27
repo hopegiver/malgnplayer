@@ -21,7 +21,6 @@ export default class MalgnPlayer {
             autoplay: false,
             muted: false,
             controls: true,
-            theme: 'default',
             ...config
         };
 
