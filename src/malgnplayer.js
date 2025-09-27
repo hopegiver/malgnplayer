@@ -1,6 +1,7 @@
 import { VideoCore } from './core/video.js';
 import { Playlist } from './core/playlist.js';
 import { HLSPlugin } from './plugins/hls.js';
+import { DRMPlugin } from './plugins/drm.js';
 import { PlayerUI } from './ui/ui.js';
 import { AutoloopManager } from './core/autoloop.js';
 import { SubtitleManager } from './core/subtitles.js';
@@ -83,7 +84,9 @@ export default class MalgnPlayer {
 
     setupPlugins() {
         this.plugins.hls = new HLSPlugin();
+        this.plugins.drm = new DRMPlugin();
         this.core.addPlugin(this.plugins.hls);
+        this.core.addPlugin(this.plugins.drm);
     }
 
     setupTheme() {
@@ -286,6 +289,23 @@ export default class MalgnPlayer {
 
     getPlaybackRate() {
         return this.core.video ? this.core.video.playbackRate : 1;
+    }
+
+    // DRM functionality
+    getDrmInfo() {
+        return this.plugins.drm ? this.plugins.drm.getDrmInfo() : null;
+    }
+
+    async renewDrmLicense() {
+        if (this.plugins.drm) {
+            return await this.plugins.drm.renewLicense();
+        }
+        throw new Error('DRM plugin not available');
+    }
+
+    isDrmProtected() {
+        const drmInfo = this.getDrmInfo();
+        return drmInfo !== null;
     }
 
     // Subtitle functionality (delegated to SubtitleManager)

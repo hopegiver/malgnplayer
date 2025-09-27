@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MalgnPlayer DRM Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        #player {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .info-item {
+            margin: 8px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .log-panel {
+            background: #212529;
+            color: #28a745;
+            padding: 15px;
+            border-radius: 4px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .scenario {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        .scenario h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .scenario button {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 MalgnPlayer DRM Test</h1>
+
+        <div id="player"></div>
+
+        <div class="controls">
+            <button onclick="play()">▶️ Play</button>
+            <button onclick="pause()">⏸️ Pause</button>
+            <button onclick="stop()">⏹️ Stop</button>
+            <button onclick="getDrmInfo()">🔒 Get DRM Info</button>
+            <button onclick="renewLicense()">🔄 Renew License</button>
+            <button onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <div class="test-scenarios">
+            <div class="scenario">
+                <h4>Widevine Test</h4>
+                <p>Test Widevine DRM protected content</p>
+                <button onclick="loadWidevineContent()">Load Widevine Content</button>
+            </div>
+
+            <div class="scenario">
+                <h4>PlayReady Test</h4>
+                <p>Test PlayReady DRM protected content</p>
+                <button onclick="loadPlayReadyContent()">Load PlayReady Content</button>
+            </div>
+
+            <div class="scenario">
+                <h4>HLS + DRM Test</h4>
+                <p>Test HLS streaming with DRM protection</p>
+                <button onclick="loadHLSDrmContent()">Load HLS DRM Content</button>
+            </div>
+
+            <div class="scenario">
+                <h4>Regular Content</h4>
+                <p>Test regular non-DRM content</p>
+                <button onclick="loadRegularContent()">Load Regular Content</button>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>📊 Player Information</h3>
+            <div class="info-item">Status: <span id="status">Not loaded</span></div>
+            <div class="info-item">DRM Protected: <span id="drm-status">No</span></div>
+            <div class="info-item">Key System: <span id="key-system">None</span></div>
+            <div class="info-item">License Server: <span id="license-server">None</span></div>
+            <div class="info-item">Session ID: <span id="session-id">None</span></div>
+        </div>
+
+        <div class="log-panel" id="log"></div>
+    </div>
+
+    <script type="module">
+        import MalgnPlayer from './dist/malgnplayer.esm.js';
+
+        let player;
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateInfo() {
+            const drmInfo = player.getDrmInfo();
+            const isDrmProtected = player.isDrmProtected();
+
+            document.getElementById('drm-status').textContent = isDrmProtected ? 'Yes' : 'No';
+
+            if (drmInfo) {
+                document.getElementById('key-system').textContent = drmInfo.keySystem || 'Unknown';
+                document.getElementById('license-server').textContent = drmInfo.licenseServerUrl || 'Unknown';
+                document.getElementById('session-id').textContent = drmInfo.sessionId || 'Unknown';
+            } else {
+                document.getElementById('key-system').textContent = 'None';
+                document.getElementById('license-server').textContent = 'None';
+                document.getElementById('session-id').textContent = 'None';
+            }
+        }
+
+        // Initialize player
+        function initPlayer() {
+            player = new MalgnPlayer('player', {
+                width: '100%',
+                height: '400px',
+                controls: true
+            });
+
+            // Event listeners
+            player.on('ready', () => {
+                log('Player ready');
+                document.getElementById('status').textContent = 'Ready';
+            });
+
+            player.on('play', () => {
+                log('Playback started');
+                document.getElementById('status').textContent = 'Playing';
+            });
+
+            player.on('pause', () => {
+                log('Playback paused');
+                document.getElementById('status').textContent = 'Paused';
+            });
+
+            player.on('error', (event) => {
+                log(`Error: ${event.message || 'Unknown error'}`, 'error');
+                document.getElementById('status').textContent = 'Error';
+            });
+
+            // DRM specific events
+            player.on('drmReady', (event) => {
+                log(`DRM ready: ${event.keySystem}`, 'info');
+                updateInfo();
+            });
+
+            player.on('drmLicenseAcquired', (event) => {
+                log(`License acquired: ${event.sessionId}`, 'info');
+                updateInfo();
+            });
+
+            player.on('drmError', (event) => {
+                log(`DRM Error: ${event.type} - ${event.message}`, 'error');
+            });
+
+            player.on('drmKeyStatusChange', (event) => {
+                log(`Key status changed: ${event.keyId} -> ${event.status}`, 'info');
+            });
+
+            player.on('drmLicenseRenewed', () => {
+                log('License renewed successfully', 'info');
+            });
+
+            log('Player initialized');
+        }
+
+        // Control functions
+        window.play = () => {
+            player.play();
+        };
+
+        window.pause = () => {
+            player.pause();
+        };
+
+        window.stop = () => {
+            player.pause();
+            player.seek(0);
+        };
+
+        window.getDrmInfo = () => {
+            const drmInfo = player.getDrmInfo();
+            if (drmInfo) {
+                log(`DRM Info: ${JSON.stringify(drmInfo)}`, 'info');
+            } else {
+                log('No DRM information available', 'warning');
+            }
+            updateInfo();
+        };
+
+        window.renewLicense = async () => {
+            try {
+                await player.renewDrmLicense();
+                log('License renewal requested', 'info');
+            } catch (error) {
+                log(`License renewal failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.clearLog = () => {
+            document.getElementById('log').innerHTML = '';
+        };
+
+        // Test scenarios
+        window.loadWidevineContent = () => {
+            log('Loading Widevine test content...', 'info');
+            // Example Widevine configuration
+            player.load({
+                file: 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8',
+                drm: {
+                    'com.widevine.alpha': {
+                        licenseServerUrl: 'https://widevine-proxy.appspot.com/proxy',
+                        videoRobustness: 'SW_SECURE_DECODE',
+                        audioRobustness: 'SW_SECURE_CRYPTO'
+                    }
+                }
+            });
+        };
+
+        window.loadPlayReadyContent = () => {
+            log('Loading PlayReady test content...', 'info');
+            // Example PlayReady configuration
+            player.load({
+                file: 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8',
+                drm: {
+                    'com.microsoft.playready': {
+                        licenseServerUrl: 'https://playready.directtaps.net/pr/svc/rightsmanager.asmx',
+                        videoRobustness: 'SW_SECURE_DECODE',
+                        audioRobustness: 'SW_SECURE_CRYPTO'
+                    }
+                }
+            });
+        };
+
+        window.loadHLSDrmContent = () => {
+            log('Loading HLS + DRM test content...', 'info');
+            player.load({
+                file: 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8',
+                type: 'hls',
+                drm: {
+                    keySystem: 'com.widevine.alpha',
+                    licenseServerUrl: 'https://widevine-proxy.appspot.com/proxy'
+                }
+            });
+        };
+
+        window.loadRegularContent = () => {
+            log('Loading regular test content...', 'info');
+            player.load({
+                file: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+            });
+        };
+
+        // Initialize when page loads
+        initPlayer();
+        log('DRM test page loaded. EME supported: ' + (window.navigator.requestMediaKeySystemAccess ? 'Yes' : 'No'));
+    </script>
+</body>
+</html>

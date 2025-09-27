@@ -74,13 +74,24 @@ export class VideoCore extends EventEmitter {
             this.video.removeAttribute('poster');
         }
 
-        const canUsePlugin = this.plugins.find(plugin =>
+        // Find applicable plugins
+        const applicablePlugins = this.plugins.filter(plugin =>
             plugin.canPlay && plugin.canPlay(this.currentSource)
         );
 
-        if (canUsePlugin) {
+        if (applicablePlugins.length > 0) {
             try {
-                await canUsePlugin.load(this.currentSource, this.video);
+                // Load DRM plugin first if applicable
+                const drmPlugin = applicablePlugins.find(plugin => plugin.constructor.name === 'DRMPlugin');
+                if (drmPlugin) {
+                    await drmPlugin.load(this.currentSource, this.video);
+                }
+
+                // Then load other plugins (HLS, etc.)
+                const otherPlugins = applicablePlugins.filter(plugin => plugin.constructor.name !== 'DRMPlugin');
+                for (const plugin of otherPlugins) {
+                    await plugin.load(this.currentSource, this.video);
+                }
             } catch (error) {
                 console.error('Plugin load error:', error);
                 // Fallback to native video loading
