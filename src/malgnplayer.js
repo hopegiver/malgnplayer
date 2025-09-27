@@ -1,7 +1,7 @@
 import { VideoCore } from './core/video.js';
 import { Playlist } from './core/playlist.js';
 import { HLSPlugin } from './plugins/hls.js';
-import { PlayerUI } from './core/ui.js';
+import { PlayerUI } from './ui/ui.js';
 
 export default class MalgnPlayer {
     constructor(container, config = {}) {
