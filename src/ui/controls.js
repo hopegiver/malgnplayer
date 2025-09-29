@@ -89,6 +89,9 @@ export class Controls {
             innerHTML: icons.playlist
         });
 
+        // Picture-in-Picture button (will be set by PiP manager if supported)
+        this.pipButton = null;
+
         // Fullscreen button
         this.fullscreenButton = createElement('button', {
             className: 'malgnplayer-btn malgnplayer-fullscreen-btn',
@@ -105,6 +108,10 @@ export class Controls {
         controlsRight.appendChild(this.speedButton);
         controlsRight.appendChild(this.subtitlesButton);
         controlsRight.appendChild(this.playlistButton);
+
+        // PiP button will be inserted here if supported
+        this.pipButtonContainer = controlsRight;
+
         controlsRight.appendChild(this.fullscreenButton);
 
         const controlsMain = createElement('div', { className: 'malgnplayer-controls-main' });
@@ -261,6 +268,21 @@ export class Controls {
         } else {
             this.container.requestFullscreen();
             this.fullscreenButton.innerHTML = icons.exitFullscreen;
+        }
+    }
+
+    addPipButton(pipButton) {
+        if (this.pipButton || !pipButton) return;
+
+        this.pipButton = pipButton;
+        // Insert before fullscreen button
+        this.pipButtonContainer.insertBefore(pipButton, this.fullscreenButton);
+    }
+
+    removePipButton() {
+        if (this.pipButton && this.pipButton.parentNode) {
+            this.pipButton.parentNode.removeChild(this.pipButton);
+            this.pipButton = null;
         }
     }
 

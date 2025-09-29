@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MalgnPlayer Picture-in-Picture Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .player {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pip-button {
+            background: #ff6b6b;
+        }
+
+        .pip-button:hover {
+            background: #ff5252;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .info-item {
+            margin: 8px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .log-panel {
+            background: #212529;
+            color: #28a745;
+            padding: 15px;
+            border-radius: 4px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .scenario {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        .scenario h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .scenario button {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .feature-list {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .feature-list h3 {
+            margin-top: 0;
+            color: #2d5a2d;
+        }
+
+        .feature-list ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .feature-list li {
+            margin: 5px 0;
+        }
+
+        .support-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ MalgnPlayer Picture-in-Picture Test</h1>
+
+        <div class="support-note">
+            <strong>📋 브라우저 지원:</strong> PiP는 Chrome 70+, Firefox 71+, Safari 13.1+에서 지원됩니다.
+            일부 브라우저에서는 사용자 설정에 따라 비활성화될 수 있습니다.
+        </div>
+
+        <div id="player1" class="player"></div>
+
+        <div class="controls">
+            <button onclick="play()">▶️ Play</button>
+            <button onclick="pause()">⏸️ Pause</button>
+            <button class="pip-button" onclick="enterPip()">📤 Enter PiP</button>
+            <button class="pip-button" onclick="exitPip()">📥 Exit PiP</button>
+            <button class="pip-button" onclick="togglePip()">🔄 Toggle PiP</button>
+            <button onclick="getPipStatus()">📊 Get Status</button>
+            <button onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <div class="test-scenarios">
+            <div class="scenario">
+                <h4>기본 PiP 테스트</h4>
+                <p>Picture-in-Picture 기본 기능 테스트</p>
+                <button onclick="createPlayer({ pip: true })">Create Player</button>
+            </div>
+
+            <div class="scenario">
+                <h4>자동 PiP (탭 전환시)</h4>
+                <p>다른 탭으로 이동시 자동으로 PiP 모드 진입</p>
+                <button onclick="createPlayer({ pip: true, pipAutoEnter: true })">Create Player</button>
+            </div>
+
+            <div class="scenario">
+                <h4>PiP 비활성화</h4>
+                <p>PiP 기능을 사용하지 않는 플레이어</p>
+                <button onclick="createPlayer({ pip: false })">Create Player</button>
+            </div>
+
+            <div class="scenario">
+                <h4>HLS + PiP</h4>
+                <p>HLS 스트리밍과 PiP 조합 테스트</p>
+                <button onclick="createHlsPlayer()">Create HLS Player</button>
+            </div>
+        </div>
+
+        <div class="feature-list">
+            <h3>🎯 PiP 기능 리스트</h3>
+            <ul>
+                <li><strong>컨트롤 버튼:</strong> 플레이어 우하단 PiP 버튼 클릭</li>
+                <li><strong>키보드 단축키:</strong> P 키로 PiP 토글</li>
+                <li><strong>자동 진입:</strong> 탭 전환시 자동 PiP (옵션)</li>
+                <li><strong>상태 감지:</strong> PiP 진입/종료 이벤트</li>
+                <li><strong>브라우저 호환:</strong> 지원되지 않는 브라우저에서 버튼 자동 숨김</li>
+                <li><strong>사용자 친화적:</strong> 직관적인 아이콘과 툴팁</li>
+            </ul>
+        </div>
+
+        <div class="info-panel">
+            <h3>📊 PiP Status</h3>
+            <div class="info-item">Supported: <span id="supported">Unknown</span></div>
+            <div class="info-item">Active: <span id="active">Unknown</span></div>
+            <div class="info-item">Available: <span id="available">Unknown</span></div>
+            <div class="info-item">Player State: <span id="state">Unknown</span></div>
+            <div class="info-item">Current URL: <span id="current-url">None</span></div>
+        </div>
+
+        <div class="log-panel" id="log"></div>
+    </div>
+
+    <script type="module">
+        import MalgnPlayer from './dist/malgnplayer.esm.js';
+
+        let player;
+        const testVideo = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+        const testHLS = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus() {
+            if (!player) return;
+
+            const status = player.getPipStatus();
+            const state = player.getState();
+
+            document.getElementById('supported').textContent = status.supported ? 'Yes' : 'No';
+            document.getElementById('active').textContent = status.active ? 'Yes' : 'No';
+            document.getElementById('available').textContent = status.available ? 'Yes' : 'No';
+            document.getElementById('state').textContent = state || 'Unknown';
+
+            if (player.core && player.core.video) {
+                document.getElementById('current-url').textContent = player.core.video.currentSrc || 'None';
+            }
+        }
+
+        // Global functions for buttons
+        window.createPlayer = function(config) {
+            if (player) {
+                player.destroy();
+            }
+
+            const finalConfig = {
+                file: testVideo,
+                width: '100%',
+                height: '400px',
+                ...config
+            };
+
+            log(`Creating player with config: ${JSON.stringify(finalConfig)}`, 'info');
+
+            player = new MalgnPlayer('player1', finalConfig);
+
+            // Event listeners
+            player.on('ready', () => {
+                log('Player ready');
+                updateStatus();
+            });
+
+            player.on('play', () => {
+                log('Playback started');
+                updateStatus();
+            });
+
+            player.on('pause', () => {
+                log('Playback paused');
+                updateStatus();
+            });
+
+            player.on('error', (event) => {
+                log(`Error: ${event.message || 'Unknown error'}`, 'error');
+                updateStatus();
+            });
+
+            // PiP specific events
+            player.on('pipenter', (event) => {
+                log(`PiP entered: ${event.width}x${event.height}`, 'info');
+                updateStatus();
+            });
+
+            player.on('pipexit', (event) => {
+                log(`PiP exited: ${event.width}x${event.height}`, 'info');
+                updateStatus();
+            });
+
+            player.on('pipError', (event) => {
+                log(`PiP Error (${event.type}): ${event.message}`, 'error');
+                updateStatus();
+            });
+
+            log('Player created');
+            setTimeout(updateStatus, 1000);
+        };
+
+        window.createHlsPlayer = function() {
+            createPlayer({
+                file: testHLS,
+                type: 'hls',
+                pip: true,
+                pipAutoEnter: false
+            });
+        };
+
+        window.play = async function() {
+            if (!player) {
+                log('No player created', 'warning');
+                return;
+            }
+
+            try {
+                await player.play();
+                log('Play started');
+                updateStatus();
+            } catch (error) {
+                log(`Play failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.pause = function() {
+            if (!player) {
+                log('No player created', 'warning');
+                return;
+            }
+
+            player.pause();
+            log('Pause called');
+            updateStatus();
+        };
+
+        window.enterPip = async function() {
+            if (!player) {
+                log('No player created', 'warning');
+                return;
+            }
+
+            try {
+                const result = await player.enterPictureInPicture();
+                log(`Enter PiP result: ${result}`);
+                updateStatus();
+            } catch (error) {
+                log(`Enter PiP failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.exitPip = async function() {
+            if (!player) {
+                log('No player created', 'warning');
+                return;
+            }
+
+            try {
+                const result = await player.exitPictureInPicture();
+                log(`Exit PiP result: ${result}`);
+                updateStatus();
+            } catch (error) {
+                log(`Exit PiP failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.togglePip = async function() {
+            if (!player) {
+                log('No player created', 'warning');
+                return;
+            }
+
+            try {
+                const result = await player.togglePictureInPicture();
+                log(`Toggle PiP result: ${result}`);
+                updateStatus();
+            } catch (error) {
+                log(`Toggle PiP failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.getPipStatus = function() {
+            if (!player) {
+                log('No player created', 'warning');
+                return;
+            }
+
+            const status = player.getPipStatus();
+            log(`PiP Status: ${JSON.stringify(status)}`);
+            updateStatus();
+        };
+
+        window.clearLog = function() {
+            document.getElementById('log').innerHTML = '';
+        };
+
+        // Test keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            switch (event.key.toLowerCase()) {
+                case ' ':
+                    event.preventDefault();
+                    if (player && !player.core.video.paused) {
+                        pause();
+                    } else {
+                        play();
+                    }
+                    break;
+                case 'p':
+                    event.preventDefault();
+                    togglePip();
+                    break;
+            }
+        });
+
+        // Initialize
+        log('PiP test page loaded');
+        log('Browser PiP support: ' + (document.pictureInPictureEnabled ? 'Yes' : 'No'));
+
+        // Check specific browser
+        const userAgent = navigator.userAgent;
+        if (userAgent.includes('Chrome')) {
+            log('Browser: Chrome (Full PiP support)');
+        } else if (userAgent.includes('Firefox')) {
+            log('Browser: Firefox (PiP support from v71+)');
+        } else if (userAgent.includes('Safari')) {
+            log('Browser: Safari (PiP support from v13.1+)');
+        } else {
+            log('Browser: Unknown - PiP support may vary');
+        }
+
+        // Create default player
+        createPlayer({ pip: true });
+    </script>
+</body>
+</html>

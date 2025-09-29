@@ -6,6 +6,7 @@ import { PlayerUI } from './ui/playerUI.js';
 import { AutoloopManager } from './core/autoloop.js';
 import { SubtitleManager } from './core/subtitles.js';
 import { AutoplayManager } from './core/autoplay.js';
+import { PictureInPictureManager } from './core/pip.js';
 
 export default class MalgnPlayer {
     constructor(container, config = {}) {
@@ -28,6 +29,8 @@ export default class MalgnPlayer {
             autoloop: false,
             loopStartTime: 0,
             loopEndTime: null,
+            pip: true,                // Enable Picture-in-Picture
+            pipAutoEnter: false,      // Auto-enter PiP when tab is hidden
             ...config
         };
 
@@ -38,6 +41,7 @@ export default class MalgnPlayer {
         this.autoloop = new AutoloopManager(this);
         this.subtitles = new SubtitleManager(this);
         this.autoplayManager = new AutoplayManager(this);
+        this.pip = new PictureInPictureManager(this);
 
         this.init();
     }
@@ -49,6 +53,7 @@ export default class MalgnPlayer {
         this.bindEvents();
         this.setupAutoloop();
         this.setupAutoplay();
+        this.setupPip();
 
         // Load initial media if provided
         this.loadInitialMedia();
@@ -97,6 +102,14 @@ export default class MalgnPlayer {
         // Don't show controls in autoloop mode
         if (this.config.controls && !this.config.autoloop) {
             this.theme = new PlayerUI(this);
+
+            // Add PiP button if enabled and supported
+            if (this.config.pip && this.pip.isSupported) {
+                const pipButton = this.pip.createButton();
+                if (pipButton && this.theme.controls) {
+                    this.theme.controls.addPipButton(pipButton);
+                }
+            }
         }
 
         // Hide native video controls if using custom UI or in autoloop mode
@@ -116,6 +129,13 @@ export default class MalgnPlayer {
     setupAutoplay() {
         // Apply autoplay styles
         this.autoplayManager.applyStyles();
+    }
+
+    setupPip() {
+        // Apply PiP styles
+        if (this.config.pip) {
+            this.pip.applyStyles();
+        }
     }
 
     bindEvents() {
@@ -340,6 +360,31 @@ export default class MalgnPlayer {
         return await this.core.play();
     }
 
+    // Picture-in-Picture functionality
+    async enterPictureInPicture() {
+        return await this.pip.enterPictureInPicture();
+    }
+
+    async exitPictureInPicture() {
+        return await this.pip.exitPictureInPicture();
+    }
+
+    async togglePictureInPicture() {
+        return await this.pip.togglePictureInPicture();
+    }
+
+    getPipStatus() {
+        return this.pip.getStatus();
+    }
+
+    isPictureInPictureSupported() {
+        return this.pip.isSupported;
+    }
+
+    isPictureInPictureActive() {
+        return this.pip.isActive;
+    }
+
     // Subtitle functionality (delegated to SubtitleManager)
     getSubtitles() {
         return this.subtitles.getSubtitles();
@@ -517,6 +562,10 @@ export default class MalgnPlayer {
 
         if (this.autoplayManager) {
             this.autoplayManager.destroy();
+        }
+
+        if (this.pip) {
+            this.pip.destroy();
         }
 
         if (this.theme && this.theme.destroy) {
