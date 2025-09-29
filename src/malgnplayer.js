@@ -5,6 +5,7 @@ import { DRMPlugin } from './plugins/drm.js';
 import { PlayerUI } from './ui/playerUI.js';
 import { AutoloopManager } from './core/autoloop.js';
 import { SubtitleManager } from './core/subtitles.js';
+import { AutoplayManager } from './core/autoplayManager.js';
 
 export default class MalgnPlayer {
     constructor(container, config = {}) {
@@ -36,6 +37,7 @@ export default class MalgnPlayer {
         this.theme = null;
         this.autoloop = new AutoloopManager(this);
         this.subtitles = new SubtitleManager(this);
+        this.autoplayManager = new AutoplayManager(this);
 
         this.init();
     }
@@ -46,6 +48,7 @@ export default class MalgnPlayer {
         this.setupTheme();
         this.bindEvents();
         this.setupAutoloop();
+        this.setupAutoplay();
 
         // Load initial media if provided
         this.loadInitialMedia();
@@ -110,6 +113,11 @@ export default class MalgnPlayer {
         }
     }
 
+    setupAutoplay() {
+        // Apply autoplay styles
+        this.autoplayManager.applyStyles();
+    }
+
     bindEvents() {
         this.playlist.on('playlistItem', (data) => {
             this.core.load(data.item);
@@ -148,7 +156,12 @@ export default class MalgnPlayer {
         return this;
     }
 
-    play() {
+    async play() {
+        const success = await this.autoplayManager.tryAutoplay();
+        if (!success) {
+            // Autoplay was blocked, but autoplay manager will handle UI
+            return false;
+        }
         return this.core.play();
     }
 
@@ -315,6 +328,16 @@ export default class MalgnPlayer {
     isDrmProtected() {
         const drmInfo = this.getDrmInfo();
         return drmInfo !== null;
+    }
+
+    // Autoplay functionality
+    getAutoplayStatus() {
+        return this.autoplayManager.getStatus();
+    }
+
+    async forcePlay() {
+        // Force play without autoplay restrictions (for user interactions)
+        return await this.core.play();
     }
 
     // Subtitle functionality (delegated to SubtitleManager)
@@ -490,6 +513,10 @@ export default class MalgnPlayer {
 
         if (this.subtitles) {
             this.subtitles.destroy();
+        }
+
+        if (this.autoplayManager) {
+            this.autoplayManager.destroy();
         }
 
         if (this.theme && this.theme.destroy) {
