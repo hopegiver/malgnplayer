@@ -7,6 +7,7 @@ import { AutoloopManager } from './core/autoloop.js';
 import { SubtitleManager } from './core/subtitles.js';
 import { AutoplayManager } from './core/autoplay.js';
 import { PictureInPictureManager } from './core/pip.js';
+import { ThumbnailManager } from './core/thumbnails.js';
 
 export default class MalgnPlayer {
     constructor(container, config = {}) {
@@ -31,6 +32,14 @@ export default class MalgnPlayer {
             loopEndTime: null,
             pip: true,                // Enable Picture-in-Picture
             pipAutoEnter: false,      // Auto-enter PiP when tab is hidden
+            thumbnails: {             // Thumbnail preview settings
+                enabled: true,        // Enable thumbnail previews
+                width: 160,           // Thumbnail width
+                height: 90,           // Thumbnail height
+                interval: 10,         // Generate every 10 seconds
+                quality: 0.8,         // Canvas export quality
+                maxCache: 50          // Maximum cached thumbnails
+            },
             ...config
         };
 
@@ -42,6 +51,7 @@ export default class MalgnPlayer {
         this.subtitles = new SubtitleManager(this);
         this.autoplayManager = new AutoplayManager(this);
         this.pip = new PictureInPictureManager(this);
+        this.thumbnails = new ThumbnailManager(this);
 
         this.init();
     }
@@ -54,6 +64,7 @@ export default class MalgnPlayer {
         this.setupAutoloop();
         this.setupAutoplay();
         this.setupPip();
+        this.setupThumbnails();
 
         // Load initial media if provided
         this.loadInitialMedia();
@@ -110,6 +121,11 @@ export default class MalgnPlayer {
                     this.theme.controls.addPipButton(pipButton);
                 }
             }
+
+            // Connect thumbnail manager to progress bar
+            if (this.config.thumbnails.enabled && this.thumbnails.isEnabled && this.theme.progressBar) {
+                this.theme.progressBar.setThumbnailManager(this.thumbnails);
+            }
         }
 
         // Hide native video controls if using custom UI or in autoloop mode
@@ -135,6 +151,13 @@ export default class MalgnPlayer {
         // Apply PiP styles
         if (this.config.pip) {
             this.pip.applyStyles();
+        }
+    }
+
+    setupThumbnails() {
+        // Apply thumbnail styles
+        if (this.config.thumbnails.enabled && this.thumbnails.isEnabled) {
+            this.thumbnails.applyStyles();
         }
     }
 
@@ -431,6 +454,30 @@ export default class MalgnPlayer {
         return this.core.video ? this.core.video.poster : null;
     }
 
+    // Thumbnail functionality
+    getThumbnailStatus() {
+        return this.thumbnails.getStatus();
+    }
+
+    setThumbnailConfig(config) {
+        this.thumbnails.setConfig(config);
+        return this;
+    }
+
+    enableThumbnails() {
+        this.thumbnails.enable();
+        return this;
+    }
+
+    disableThumbnails() {
+        this.thumbnails.disable();
+        return this;
+    }
+
+    isThumbnailSupported() {
+        return this.thumbnails.isCanvasSupported();
+    }
+
     // Additional utility functions
     isPlaying() {
         return this.getState() === 'playing';
@@ -566,6 +613,10 @@ export default class MalgnPlayer {
 
         if (this.pip) {
             this.pip.destroy();
+        }
+
+        if (this.thumbnails) {
+            this.thumbnails.destroy();
         }
 
         if (this.theme && this.theme.destroy) {

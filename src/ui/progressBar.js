@@ -6,6 +6,7 @@ export class ProgressBar {
         this.player = ui.player;
         this.container = ui.container;
         this.isDragging = false;
+        this.thumbnailManager = null;
 
         this.init();
     }
@@ -80,6 +81,10 @@ export class ProgressBar {
         this.progressBar.addEventListener('mouseleave', () => {
             if (!this.isDragging) {
                 this.progressTooltip.style.opacity = '0';
+                // Hide thumbnail
+                if (this.thumbnailManager) {
+                    this.thumbnailManager.hideThumbnail();
+                }
             }
         });
 
@@ -133,6 +138,20 @@ export class ProgressBar {
 
             this.progressTooltip.textContent = timeString;
             this.progressTooltip.style.left = `${percent * 100}%`;
+
+            // Show thumbnail if enabled (hover only, not drag)
+            if (this.thumbnailManager && !this.isDragging) {
+                console.log('ProgressBar calling showThumbnail:', { time, thumbnailManager: !!this.thumbnailManager });
+                // Use progress bar position for thumbnail
+                const x = event.clientX;
+                const y = rect.top;
+                this.thumbnailManager.showThumbnail(time, x, y);
+            } else {
+                console.log('ProgressBar NOT calling showThumbnail:', {
+                    thumbnailManager: !!this.thumbnailManager,
+                    isDragging: this.isDragging
+                });
+            }
         }
     }
 
@@ -156,6 +175,14 @@ export class ProgressBar {
             this.progressTooltip.style.left = `${percent * 100}%`;
             this.progressTooltip.style.opacity = '1';
 
+            // Show thumbnail if enabled
+            if (this.thumbnailManager) {
+                const containerRect = this.container.getBoundingClientRect();
+                const x = event.clientX - containerRect.left;
+                const y = rect.top - containerRect.top;
+                this.thumbnailManager.showThumbnail(time, x, y);
+            }
+
             // Seek video to new position
             this.player.seek(time);
         }
@@ -176,6 +203,11 @@ export class ProgressBar {
             // Seek video to new position
             this.player.seek(time);
         }
+    }
+
+    setThumbnailManager(thumbnailManager) {
+        console.log('ProgressBar setThumbnailManager called:', !!thumbnailManager);
+        this.thumbnailManager = thumbnailManager;
     }
 
     getElement() {

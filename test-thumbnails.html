@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MalgnPlayer - Thumbnail Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .player-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .info {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .status {
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 MalgnPlayer - Thumbnail Preview Test</h1>
+
+        <div class="player-container">
+            <div id="player"></div>
+        </div>
+
+        <div class="controls">
+            <button onclick="player.play()">Play</button>
+            <button onclick="player.pause()">Pause</button>
+            <button onclick="player.seek(0)">Restart</button>
+            <button onclick="showThumbnailInfo()">Show Thumbnail Info</button>
+            <button onclick="toggleThumbnails()">Toggle Thumbnails</button>
+        </div>
+
+        <div class="info">
+            <h3>Instructions:</h3>
+            <p>• Hover over the progress bar to see thumbnail previews</p>
+            <p>• Thumbnails are generated automatically as you hover</p>
+            <p>• Try different video positions to see caching in action</p>
+
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <script src="dist/malgnplayer.min.js"></script>
+    <script>
+        // Initialize player with thumbnail support
+        const player = new MalgnPlayer('player', {
+            file: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            poster: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg',
+            width: '100%',
+            height: '450px',
+            thumbnails: {
+                enabled: true,
+                width: 160,
+                height: 90,
+                interval: 5,  // Generate every 5 seconds for faster testing
+                quality: 0.8,
+                maxCache: 20
+            }
+        });
+
+        function showThumbnailInfo() {
+            const status = player.getThumbnailStatus();
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <strong>Thumbnail Status:</strong><br>
+                • Enabled: ${status.enabled}<br>
+                • Supported: ${status.supported}<br>
+                • Cache Size: ${status.cacheSize}/${status.maxCache}<br>
+                • Currently Generating: ${status.isGenerating}
+            `;
+        }
+
+        function toggleThumbnails() {
+            const status = player.getThumbnailStatus();
+            if (status.enabled) {
+                player.disableThumbnails();
+                alert('Thumbnails disabled');
+            } else {
+                player.enableThumbnails();
+                alert('Thumbnails enabled');
+            }
+        }
+
+        // Auto-update status every 2 seconds
+        setInterval(showThumbnailInfo, 2000);
+
+        // Show initial status
+        setTimeout(showThumbnailInfo, 1000);
+
+        // Player events
+        player.on('ready', () => {
+            console.log('Player ready');
+        });
+
+        player.on('loadedmetadata', () => {
+            console.log('Video metadata loaded - thumbnails can now be generated');
+        });
+    </script>
+</body>
+</html>
