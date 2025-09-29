@@ -86,7 +86,7 @@ export class AutoloopManager extends EventEmitter {
         }
 
         if (this.player.config.controls && !this.player.theme) {
-            const { PlayerUI } = await import('../ui/ui.js');
+            const { PlayerUI } = await import('../ui/playerUI.js');
             this.player.theme = new PlayerUI(this.player);
             this.player.core.video.controls = false;
         }

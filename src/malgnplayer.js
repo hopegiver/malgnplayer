@@ -2,7 +2,7 @@ import { VideoCore } from './core/video.js';
 import { Playlist } from './core/playlist.js';
 import { HLSPlugin } from './plugins/hls.js';
 import { DRMPlugin } from './plugins/drm.js';
-import { PlayerUI } from './ui/ui.js';
+import { PlayerUI } from './ui/playerUI.js';
 import { AutoloopManager } from './core/autoloop.js';
 import { SubtitleManager } from './core/subtitles.js';
 
