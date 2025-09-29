@@ -1,6 +1,6 @@
 {
   "name": "malgnplayer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Modern HTML5 video player with JWPlayer-compatible API, HLS support, and comprehensive DRM protection",
   "main": "dist/malgnplayer.min.js",
   "module": "dist/malgnplayer.esm.js",

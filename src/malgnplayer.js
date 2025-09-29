@@ -89,6 +89,7 @@ export default class MalgnPlayer {
         this.core.addPlugin(this.plugins.drm);
     }
 
+
     setupTheme() {
         // Don't show controls in autoloop mode
         if (this.config.controls && !this.config.autoloop) {
@@ -112,12 +113,14 @@ export default class MalgnPlayer {
     bindEvents() {
         this.playlist.on('playlistItem', (data) => {
             this.core.load(data.item);
+            this.updatePlaylistPanel();
         });
 
         this.core.on('ended', () => {
             const nextItem = this.playlist.next();
             if (nextItem) {
                 this.core.load(nextItem);
+                this.updatePlaylistPanel();
             }
         });
     }
@@ -139,6 +142,9 @@ export default class MalgnPlayer {
             this.playlist.load([source]);
             await this.core.load(source);
         }
+
+        // Update playlist panel if UI exists
+        this.updatePlaylistPanel();
         return this;
     }
 
@@ -203,6 +209,7 @@ export default class MalgnPlayer {
         const item = this.playlist.playItem(index);
         if (item) {
             await this.core.load(item);
+            this.updatePlaylistPanel();
         }
         return this;
     }
@@ -211,6 +218,7 @@ export default class MalgnPlayer {
         const nextItem = this.playlist.next();
         if (nextItem) {
             await this.core.load(nextItem);
+            this.updatePlaylistPanel();
         }
         return this;
     }
@@ -219,6 +227,7 @@ export default class MalgnPlayer {
         const prevItem = this.playlist.previous();
         if (prevItem) {
             await this.core.load(prevItem);
+            this.updatePlaylistPanel();
         }
         return this;
     }
@@ -404,6 +413,16 @@ export default class MalgnPlayer {
 
     getConfig() {
         return { ...this.config };
+    }
+
+    updatePlaylistPanel() {
+        if (this.theme && this.theme.playlistPanel) {
+            const playlistData = this.getPlaylist();
+            this.theme.playlistPanel.updatePlaylist(playlistData);
+        }
+        if (this.theme && this.theme.controls) {
+            this.theme.controls.updatePlaylistButtonVisibility();
+        }
     }
 
     // Convenience methods for common operations

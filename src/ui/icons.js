@@ -81,5 +81,9 @@ export const icons = {
         <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/>
         <path d="M6 10h2v1H6zm3 0h6v1H9zm-3 2.5h4v1H6zm5 0h7v1h-7zm-5 2.5h3v1H6zm4 0h8v1h-8z" fill="currentColor" opacity="0.3"/>
         <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`,
+
+    playlist: `<svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
     </svg>`
 };

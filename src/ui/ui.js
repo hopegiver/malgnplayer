@@ -4,6 +4,7 @@ import { SubtitlesLayer } from '../ui/subtitlesLayer.js';
 import { Controls } from '../ui/controls.js';
 import { ProgressBar } from '../ui/progressBar.js';
 import { VideoInteractions } from '../ui/videoInteractions.js';
+import { PlaylistPanel } from '../ui/playlistPanel.js';
 
 export class PlayerUI {
     constructor(player) {
@@ -17,6 +18,7 @@ export class PlayerUI {
         this.controls = null;
         this.progressBar = null;
         this.videoInteractions = null;
+        this.playlistPanel = null;
 
         this.init();
     }
@@ -33,6 +35,7 @@ export class PlayerUI {
     createLayers() {
         this.speedLayer = new SpeedLayer(this);
         this.subtitlesLayer = new SubtitlesLayer(this);
+        this.playlistPanel = new PlaylistPanel(this.player);
     }
 
     createComponents() {
@@ -654,6 +657,9 @@ export class PlayerUI {
         }
         if (this.videoInteractions) {
             this.videoInteractions.destroy();
+        }
+        if (this.playlistPanel) {
+            this.playlistPanel.destroy();
         }
     }
 }

@@ -83,6 +83,12 @@ export class Controls {
             innerHTML: icons.subtitlesOff
         });
 
+        // Playlist button
+        this.playlistButton = createElement('button', {
+            className: 'malgnplayer-btn malgnplayer-playlist-btn',
+            innerHTML: icons.playlist
+        });
+
         // Fullscreen button
         this.fullscreenButton = createElement('button', {
             className: 'malgnplayer-btn malgnplayer-fullscreen-btn',
@@ -98,6 +104,7 @@ export class Controls {
 
         controlsRight.appendChild(this.speedButton);
         controlsRight.appendChild(this.subtitlesButton);
+        controlsRight.appendChild(this.playlistButton);
         controlsRight.appendChild(this.fullscreenButton);
 
         const controlsMain = createElement('div', { className: 'malgnplayer-controls-main' });
@@ -151,6 +158,13 @@ export class Controls {
             this.ui.subtitlesLayer.toggle();
         });
 
+        // Playlist button
+        this.playlistButton.addEventListener('click', () => {
+            if (this.ui.playlistPanel) {
+                this.ui.playlistPanel.toggle();
+            }
+        });
+
         // Fullscreen button
         this.fullscreenButton.addEventListener('click', () => {
             this.toggleFullscreen();
@@ -180,6 +194,7 @@ export class Controls {
         // Update subtitle button visibility when video loads
         this.player.on('loadedmetadata', () => {
             this.updateSubtitleButtonVisibility();
+            this.updatePlaylistButtonVisibility();
         });
 
         // Volume bar interaction
@@ -227,6 +242,15 @@ export class Controls {
             } else {
                 this.subtitlesButton.innerHTML = icons.subtitles;
             }
+        }
+    }
+
+    updatePlaylistButtonVisibility() {
+        const playlist = this.player.getPlaylist();
+        if (playlist.length <= 1) {
+            this.playlistButton.style.display = 'none';
+        } else {
+            this.playlistButton.style.display = 'flex';
         }
     }
 

@@ -33,32 +33,24 @@ export class HLSPlugin {
             return window.Hls;
         }
 
-        try {
-            // Try dynamic import first
-            const hlsModule = await import('../libs/hls.min.js');
-            this.hlsLoaded = true;
-            return window.Hls;
-        } catch (importError) {
-            // Fallback to script tag loading if import fails
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'libs/hls.min.js';
-                script.onload = () => {
-                    this.hlsLoaded = true;
-                    resolve(window.Hls);
-                };
-                script.onerror = () => {
-                    reject(new Error('Failed to load HLS library via script tag'));
-                };
-                document.head.appendChild(script);
-            });
-        }
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+            script.onload = () => {
+                this.hlsLoaded = true;
+                resolve(window.Hls);
+            };
+            script.onerror = () => {
+                reject(new Error('Failed to load HLS library from CDN'));
+            };
+            document.head.appendChild(script);
+        });
     }
 
     async load(source, videoElement) {
         this.video = videoElement;
 
-        // Load HLS library dynamically for m3u8 files
+        // Load HLS library dynamically
         try {
             await this.loadHlsLibrary();
         } catch (error) {
@@ -80,7 +72,7 @@ export class HLSPlugin {
             this.hls.destroy();
         }
 
-        this.hls = new Hls({
+        this.hls = new window.Hls({
             enableWorker: false,
             lowLatencyMode: true,
             backBufferLength: 90
@@ -89,7 +81,7 @@ export class HLSPlugin {
         this.hls.loadSource(source.file);
         this.hls.attachMedia(this.video);
 
-        this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        this.hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
             if (this.core) {
                 this.core.emit('hlsManifestParsed', {
                     levels: this.hls.levels
@@ -97,7 +89,7 @@ export class HLSPlugin {
             }
         });
 
-        this.hls.on(Hls.Events.ERROR, (event, data) => {
+        this.hls.on(window.Hls.Events.ERROR, (event, data) => {
             if (this.core) {
                 this.core.emit('hlsError', {
                     type: data.type,
@@ -108,10 +100,10 @@ export class HLSPlugin {
 
             if (data.fatal) {
                 switch (data.type) {
-                    case Hls.ErrorTypes.NETWORK_ERROR:
+                    case window.Hls.ErrorTypes.NETWORK_ERROR:
                         this.hls.startLoad();
                         break;
-                    case Hls.ErrorTypes.MEDIA_ERROR:
+                    case window.Hls.ErrorTypes.MEDIA_ERROR:
                         this.hls.recoverMediaError();
                         break;
                     default:
@@ -121,7 +113,7 @@ export class HLSPlugin {
             }
         });
 
-        this.hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+        this.hls.on(window.Hls.Events.LEVEL_SWITCHED, (event, data) => {
             if (this.core) {
                 this.core.emit('hlsLevelSwitched', {
                     level: data.level

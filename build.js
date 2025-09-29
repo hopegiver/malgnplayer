@@ -30,19 +30,12 @@ const builds = [
 
 
 async function copyLibs() {
-  // Create libs directory in dist
+  // HLS library is now dynamically loaded only when needed
+  // Clean up any existing libs directory
   const libsDir = 'dist/libs';
-  if (!fs.existsSync(libsDir)) {
-    fs.mkdirSync(libsDir, { recursive: true });
-  }
-
-  // Copy HLS library
-  const hlsSource = 'src/libs/hls.min.js';
-  const hlsTarget = 'dist/libs/hls.min.js';
-
-  if (fs.existsSync(hlsSource)) {
-    fs.copyFileSync(hlsSource, hlsTarget);
-    console.log('Copied libs/hls.min.js');
+  if (fs.existsSync(libsDir)) {
+    fs.rmSync(libsDir, { recursive: true, force: true });
+    console.log('Removed dist/libs directory - using dynamic loading');
   }
 }
 

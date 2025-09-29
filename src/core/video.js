@@ -67,6 +67,13 @@ export class VideoCore extends EventEmitter {
             this.currentSource = source;
         }
 
+        // Clean up any existing plugins before loading new source
+        this.plugins.forEach(plugin => {
+            if (plugin.destroy) {
+                plugin.destroy();
+            }
+        });
+
         // Set poster image if provided
         if (this.currentSource.poster) {
             this.video.poster = this.currentSource.poster;
@@ -99,6 +106,10 @@ export class VideoCore extends EventEmitter {
                 this.video.load();
             }
         } else {
+            // Clear any existing src attribute first
+            this.video.removeAttribute('src');
+            this.video.innerHTML = '';
+
             // Handle native video loading with optional type
             if (this.currentSource.type && this.isVideoType(this.currentSource.type)) {
                 this.loadVideoWithType(this.currentSource);
