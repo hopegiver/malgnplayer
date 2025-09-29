@@ -5,7 +5,7 @@ import { DRMPlugin } from './plugins/drm.js';
 import { PlayerUI } from './ui/playerUI.js';
 import { AutoloopManager } from './core/autoloop.js';
 import { SubtitleManager } from './core/subtitles.js';
-import { AutoplayManager } from './core/autoplayManager.js';
+import { AutoplayManager } from './core/autoplay.js';
 
 export default class MalgnPlayer {
     constructor(container, config = {}) {
